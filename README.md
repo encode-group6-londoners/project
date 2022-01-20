@@ -12,7 +12,7 @@ Final project of the Encode bootcamp.
 - Transfer ownership
 - Attention to gas fees
 - Potentially add web2.0 to reduce cost
-- Use IPFS
+- Use IPFS (create a folder)
 
 ### Resources
 - https://docs.openzeppelin.com/contracts/3.x/access-control
