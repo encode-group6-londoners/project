@@ -12,6 +12,7 @@ Final project of the Encode bootcamp.
 - Transfer ownership
 - Attention to gas fees
 - Potentially add web2.0 to reduce cost
+- QR codes
 - Use IPFS (create a folder)
 
 ### Resources
