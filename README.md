@@ -11,6 +11,7 @@ Final project of the Encode bootcamp.
 - Parent Contract that deploys
 - Transfer ownership
 - Attention to gas fees
+- Potentially add web2.0 to reduce cost
 
 ### Resources
 - https://docs.openzeppelin.com/contracts/3.x/access-control
