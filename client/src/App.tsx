@@ -3,7 +3,6 @@ import './App.css';
 import {ethers} from 'ethers';
 import 'foundation-sites/dist/css/foundation.min.css';
 import {Icon, Tag} from "@blueprintjs/core";
-import {CALENDAR} from "@blueprintjs/icons/lib/esm/generated/iconNames";
 import {getRandomIcon} from "./helper";
 
 declare global {
