@@ -27,9 +27,6 @@ function App() {
 
     return (
         <div>
-            <meta charSet="utf-8"/>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-            <title>Foundation | Welcome</title>
             <link rel="stylesheet" href="https://dhbhdrzi4tiry.cloudfront.net/cdn/sites/foundation.min.css"/>
             {/* Navigation */}
             <div className="title-bar" data-responsive-toggle="realEstateMenu" data-hide-for="small">
@@ -39,7 +36,7 @@ function App() {
             <div className="top-bar" id="realEstateMenu">
                 <div className="top-bar-left">
                     <ul className="menu" data-responsive-menu="accordion">
-                        <li className="menu-text">Event Organiser</li>
+                        <li className="menu-text">NiftyPass</li>
                         <li><a href="#">One</a></li>
                         <li><a href="#">Two</a></li>
                         <li><a href="#">Three</a></li>
