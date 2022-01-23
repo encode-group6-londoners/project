@@ -2,7 +2,7 @@ import React, {useCallback, useEffect, useState} from "react";
 import './App.css';
 import Web3 from 'web3';
 import 'foundation-sites/dist/css/foundation.min.css';
-import {Menu} from "react-foundation";
+import {} from "react-foundation";
 
 function App() {
     const [data, setData] = useState({account: null, events: []});
@@ -40,7 +40,13 @@ function App() {
         const web3 = await loadWeb3();
         setWeb3Instance(web3);
         const accounts = await web3.eth.getAccounts();
-        setData({account: accounts[0], events: []});
+        const balanceWei = await web3.eth.getBalance(accounts[0]);
+
+        setData({
+            account: accounts[0],
+            balance: web3.utils.fromWei(balanceWei, 'ether'),
+            events: []
+        });
     }, [loadWeb3, setData, setWeb3Instance]);
 
     const logout = useCallback(async () => {
@@ -78,7 +84,13 @@ function App() {
                 <div className="top-bar-right">
                     <ul className="menu">
                         {data.account ? (<>
-                                <li className="menu-text">Address: {data.account}</li>
+                                <li className="menu-text top">
+                                    <span>Address:</span>{' '}
+                                    <span
+                                        title={`Full Address: ${data.account}`}>{data.account.substr(0, 6)}...{data.account.substr(-4)}</span>{' '}
+                                    <span
+                                        title={`Full ETH: ${data.balance}`}>({Math.floor(data.balance * 1000) / 1000} ETH)</span>
+                                </li>
                                 <li><a className="button" onClick={() => {
                                     logout();
                                 }}>Log out</a></li>
