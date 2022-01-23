@@ -15,7 +15,7 @@ contract NiftyPassFactory is Ownable {
     address[] private activeEvents;
     mapping(address => Event) private activeEventMapping;
 
-    event Created(address ntfAddress);
+    event Created(address nftAddress);
 
     // Creates new NFT for an event
     function createNewEvent(
@@ -30,19 +30,17 @@ contract NiftyPassFactory is Ownable {
                 eventSymbol,
                 ticketPrice,
                 totalSupply,
+				msg.sender
             );
-
-        EventMarketplace newMarketplace =
-            new EventMarketplace(token, newEvent);
 
         address newEventAddress = address(newEvent);
 
-        activeEvent.push(newEventAddress);
+        activeEvents.push(newEventAddress);
         activeEventMapping[newEventAddress] = Event({
-            festName: eventName,
-            festSymbol: eventSymbol,
+            eventName: eventName,
+            eventSymbol: eventSymbol,
             ticketPrice: ticketPrice,
-            totalSupply: totalSupply,
+            totalSupply: totalSupply
         });
 
         emit Created(newEventAddress);
@@ -61,14 +59,14 @@ contract NiftyPassFactory is Ownable {
             string memory,
             string memory,
             uint256,
-            uint256,
+            uint256
         )
     {
         return (
             activeEventMapping[eventAddress].eventName,
-            activeFestsMapping[eventAddress].eventSymbol,
+            activeEventMapping[eventAddress].eventSymbol,
             activeEventMapping[eventAddress].ticketPrice,
-            activeEventMapping[eventAddress].totalSupply,
+            activeEventMapping[eventAddress].totalSupply
         );
     }
 }

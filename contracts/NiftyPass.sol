@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/utils/Context.sol";
-import "@openzeppelin/access/AccessControl.sol";
-import "@openzeppelin/token/ERC721/ERC721.sol";
-import "@openzeppelin/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract NiftyPass is Context, AccessControl, ERC721 {
     using Counters for Counters.Counter;
@@ -27,13 +27,16 @@ contract NiftyPass is Context, AccessControl, ERC721 {
     mapping(uint256 => TicketDetails) private _ticketDetails;
     mapping(address => uint256[]) private purchasedTickets;
 
+	function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, AccessControl) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
     constructor(
         string memory eventName,
         string memory EventSymbol,
         uint256 ticketPrice,
         uint256 totalSupply,
         address organiser
-    ) public ERC721(eventName, EventSymbol) {
+    ) ERC721(eventName, EventSymbol) {
         _setupRole(MINTER_ROLE, organiser);
         _ticketPrice = ticketPrice;
         _totalSupply = totalSupply;
@@ -61,7 +64,7 @@ contract NiftyPass is Context, AccessControl, ERC721 {
         _mint(operator, newTicketId);
 
         _ticketDetails[newTicketId] = TicketDetails({
-            purchasePrice: _ticketPrice,
+            purchasePrice: _ticketPrice
         });
 
         return newTicketId;
@@ -101,7 +104,7 @@ contract NiftyPass is Context, AccessControl, ERC721 {
     // Get ticket details
     function getTicketDetails(uint256 ticketId) public view returns (uint256 purchasePrice) {
         return (
-            _ticketDetails[ticketId].purchasePrice,
+            _ticketDetails[ticketId].purchasePrice
         );
     }
 
