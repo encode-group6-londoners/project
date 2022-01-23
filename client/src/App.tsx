@@ -1,68 +1,43 @@
 import React, {useCallback, useEffect, useState} from "react";
 import './App.css';
-import Web3 from 'web3';
+import {ethers} from 'ethers';
 import 'foundation-sites/dist/css/foundation.min.css';
-import {} from "react-foundation";
+
+declare global {
+    interface Window {
+        ethereum: any;
+        web3: any;
+    }
+}
 
 function App() {
-    const [data, setData] = useState({account: null, events: []});
-    const [web3Instance, setWeb3Instance] = useState(null);
-
-    const loadWeb3 = useCallback(async () => {
-        if (window.ethereum) {
-            const web3 = new Web3(window.ethereum);
-            try {
-                // Request account access if needed
-                await window.ethereum.enable();
-                // Acccounts now exposed
-                return web3;
-            } catch (error) {
-                console.error(error);
-            }
-        }
-        // Legacy dapp browsers...
-        else if (window.web3) {
-            // Use Mist/MetaMask's provider.
-            const web3 = window.web3;
-            console.log('Injected web3 detected.');
-            return web3;
-        }
-        // Fallback to localhost; use dev console port by default...
-        else {
-            const provider = new Web3.providers.HttpProvider('http://127.0.0.1:8545');
-            const web3 = new Web3(provider);
-            console.log('No web3 instance injected, using Local web3.');
-            return web3;
-        }
-    }, []);
+    const [data, setData] = useState<any>({account: null, balance: null, events: []});
+    const [provider, setProvider] = useState<any>(null);
 
     const loginAddress = useCallback(async () => {
-        const web3 = await loadWeb3();
-        setWeb3Instance(web3);
-        const accounts = await web3.eth.getAccounts();
-        const balanceWei = await web3.eth.getBalance(accounts[0]);
+        const provider = new ethers.providers.Web3Provider(window.ethereum, "rinkeby");
+        await provider.send("eth_requestAccounts", []);
+        const signer = provider.getSigner();
+        const address = await signer.getAddress();
+        const balanceWei = await signer.getBalance();
+        setProvider(provider);
 
         setData({
-            account: accounts[0],
-            balance: web3.utils.fromWei(balanceWei, 'ether'),
+            account: address,
+            balance: ethers.utils.formatUnits(balanceWei, 'ether'),
             events: []
         });
-    }, [loadWeb3, setData, setWeb3Instance]);
+    }, [setData, setProvider]);
 
     const logout = useCallback(async () => {
-        setWeb3Instance(null);
+        setProvider(null);
         setData({account: null, events: []});
-    }, [setData, setWeb3Instance]);
+    }, [setData, setProvider]);
 
     const createEvent = useCallback(async () => {
         //web3Instance
         setData({account: null, events: []});
-    }, [setData, web3Instance]);
-
-    // useEffect(() => {
-    //     // Wait for loading completion to avoid race conditions with web3 injection timing.
-    //     loadWeb3();
-    // }, [loadWeb3]);
+    }, [setData, provider]);
 
     return (
         <div>
