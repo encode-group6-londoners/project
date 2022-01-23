@@ -7,12 +7,41 @@ import {Menu} from "react-foundation";
 function App() {
     const [data, setData] = useState({account: null, events: []});
     const [web3Instance, setWeb3Instance] = useState(null);
+
+    const loadWeb3 = useCallback(async () => {
+        if (window.ethereum) {
+            const web3 = new Web3(window.ethereum);
+            try {
+                // Request account access if needed
+                await window.ethereum.enable();
+                // Acccounts now exposed
+                return web3;
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        // Legacy dapp browsers...
+        else if (window.web3) {
+            // Use Mist/MetaMask's provider.
+            const web3 = window.web3;
+            console.log('Injected web3 detected.');
+            return web3;
+        }
+        // Fallback to localhost; use dev console port by default...
+        else {
+            const provider = new Web3.providers.HttpProvider('http://127.0.0.1:8545');
+            const web3 = new Web3(provider);
+            console.log('No web3 instance injected, using Local web3.');
+            return web3;
+        }
+    }, []);
+
     const loginAddress = useCallback(async () => {
-        const web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
+        const web3 = await loadWeb3();
         setWeb3Instance(web3);
         const accounts = await web3.eth.getAccounts();
         setData({account: accounts[0], events: []});
-    }, [setData, setWeb3Instance]);
+    }, [loadWeb3, setData, setWeb3Instance]);
 
     const logout = useCallback(async () => {
         setWeb3Instance(null);
@@ -24,6 +53,10 @@ function App() {
         setData({account: null, events: []});
     }, [setData, web3Instance]);
 
+    // useEffect(() => {
+    //     // Wait for loading completion to avoid race conditions with web3 injection timing.
+    //     loadWeb3();
+    // }, [loadWeb3]);
 
     return (
         <div>
@@ -51,7 +84,7 @@ function App() {
                                 }}>Log out</a></li>
                             </>) :
                             (<>
-                                <li><a href="#">No address logged in</a></li>
+                                <li className="menu-text">No address logged in</li>
                                 <li><a className="button" onClick={() => {
                                     loginAddress();
                                 }}>Login</a></li>
