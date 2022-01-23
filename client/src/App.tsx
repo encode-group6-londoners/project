@@ -51,9 +51,10 @@ function App() {
             name: name,
             date: date,
             value: value,
-            type: getRandomIcon(),
             address: data.account,
-        }
+        };
+        newEvent.type = getRandomIcon(JSON.stringify(newEvent));
+
         setData({
             ...data,
             events: (data.events || []).concat([newEvent])
@@ -85,13 +86,13 @@ function App() {
                                 </li>
                                 <li><a className="button" onClick={() => {
                                     logout();
-                                }}>Log out</a></li>
+                                }}>Disconnect</a></li>
                             </>) :
                             (<>
                                 <li className="menu-text">No address logged in</li>
                                 <li><a className="button" onClick={() => {
                                     loginAddress();
-                                }}>Login</a></li>
+                                }}>Connect Wallet</a></li>
                             </>)}
 
                     </ul>

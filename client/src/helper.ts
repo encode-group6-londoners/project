@@ -8,8 +8,15 @@ import {
     COMPASS,
     DASHBOARD,
     CAMERA,
-    CLOUD
+    CLOUD,
+    ROCKET_SLANT,
+    RAIN,
+    MOUNTAIN,
+    TRACTOR,
+    WALK,
+    CROWN
 } from "@blueprintjs/icons/lib/esm/generated/iconNames";
+import {ethers} from "ethers";
 
 const list = [
     CALENDAR,
@@ -21,10 +28,16 @@ const list = [
     COMPASS,
     CLOUD,
     DASHBOARD,
-    CAMERA
+    CAMERA,
+    ROCKET_SLANT,
+    RAIN,
+    MOUNTAIN,
+    TRACTOR,
+    WALK,
+    CROWN
 ];
 
-export function getRandomIcon(): string {
-    const index = Math.floor(Math.random() * 10);
+export function getRandomIcon(text: string): string {
+    const index = parseInt(ethers.utils.id(text).substr(-1), 16);
     return list[index];
 }
