@@ -37,7 +37,7 @@ contract NiftyPass is Context, AccessControl, ERC721 {
         uint256 totalSupply,
         address organiser
     ) ERC721(eventName, EventSymbol) {
-        _setupRole(MINTER_ROLE, organiser);
+        _grantRole(MINTER_ROLE, organiser);
         _ticketPrice = ticketPrice;
         _totalSupply = totalSupply;
         _organiser = organiser;
