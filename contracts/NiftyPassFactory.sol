@@ -23,7 +23,7 @@ contract NiftyPassFactory is Ownable {
         string memory eventSymbol,
         uint256 ticketPrice,
         uint256 totalSupply
-    ) public onlyOwner returns (address) {
+    ) public returns (address) {
         NiftyPass newEvent =
             new NiftyPass(
                 eventName,
