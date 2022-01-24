@@ -1,4 +1,8 @@
+require('dotenv').config();
 require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-etherscan");
+const { STAGING_ALCHEMY_KEY, PRIVATE_KEY, MNEMONIC, ETHERSCAN_API_KEY } = process.env;
+
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -17,9 +21,21 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
+	solidity: "0.8.4",
 	paths: {
 		artifacts: './client/src/artifacts',
 		sources: "./contracts",
 	},
-	solidity: "0.8.4",
+	networks: {
+		rinkeby: {
+			url: STAGING_ALCHEMY_KEY,
+			// accounts: [PRIVATE_KEY],
+			accounts: [PRIVATE_KEY],
+		}
+	},
+	etherscan: {
+		// Your API key for Etherscan
+		// Obtain one at https://etherscan.io/
+		apiKey: ETHERSCAN_API_KEY
+	  }
 };
