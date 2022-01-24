@@ -4,6 +4,8 @@ import {ethers} from 'ethers';
 import 'foundation-sites/dist/css/foundation.min.css';
 import {Icon, Tag} from "@blueprintjs/core";
 import {getRandomIcon} from "./helper";
+import {NiftyPassFacatoryABI, NiftyPassFacatoryAddress} from "./NiftyPassFactory.helper";
+import {NiftyPassABI, NiftyPassAddress} from "./NiftyPass.helper";
 
 declare global {
     interface Window {
@@ -12,12 +14,20 @@ declare global {
     }
 }
 
+export type DataState = { account: any, balance: any, events: any[] };
+
 function App() {
     const [name, updateName] = useState<any>('');
     const [date, updateDate] = useState<any>('');
     const [value, updateValue] = useState<any>('');
-    const [data, setData] = useState<any>({account: null, balance: null, events: []});
+    const [data, setData] = useState<DataState>({
+        account: null,
+        balance: null,
+        events: []
+    });
     const [provider, setProvider] = useState<any>(null);
+    const [signer, setSigner] = useState<any>(null);
+    const [contract, setContract] = useState<any>(null);
 
 
     const loginAddress = useCallback(async () => {
@@ -27,16 +37,40 @@ function App() {
         const address = await signer.getAddress();
         const balanceWei = await signer.getBalance();
         setProvider(provider);
+        setSigner(signer);
 
-        setData({
+        let newData: DataState = {
             account: address,
             balance: ethers.utils.formatUnits(balanceWei, 'ether'),
             events: []
-        });
-    }, [setData, setProvider]);
+        };
+
+        const factoryContract = new ethers.Contract(NiftyPassFacatoryAddress, NiftyPassFacatoryABI, provider);
+        setContract(factoryContract);
+        const activeEvents: string[] = (await factoryContract.getActiveEvents() || []);
+
+        for (let i = 0; i < activeEvents.length; i++) {
+            const eventDetailsContract: any = new ethers.Contract(activeEvents[i], NiftyPassABI, provider);
+            let name = await eventDetailsContract.name();
+            let ticketCounts = await eventDetailsContract.ticketCounts();
+
+            const newEvent: any = {
+                name: name,
+                date: '2022-01-01',
+                value: ticketCounts.toString(),
+                address: activeEvents[i],
+                type: getRandomIcon(activeEvents[i])
+            };
+
+            newData.events.push(newEvent);
+        }
+
+        setData(newData);
+    }, [setData, setProvider, setSigner, setContract]);
+
     const logout = useCallback(async () => {
         setProvider(null);
-        setData({account: null, events: []});
+        setData({account: null, balance: null, events: []});
     }, [setData, setProvider]);
 
     const resetForm = useCallback(async () => {
@@ -44,6 +78,7 @@ function App() {
         updateDate('');
         updateValue('');
     }, [updateDate, updateName, updateValue]);
+
     const handleSubmit = useCallback(async () => {
         //web3Instance
         const newEvent: any = {
@@ -164,7 +199,9 @@ function App() {
                     <div className="column" key={index}>
                         <div className="callout">
                             <h3 style={{textTransform: 'capitalize'}}>{event.name}</h3>
-                            <p><Icon icon={event.type} iconSize={40}/></p>
+                            <p>{event.value} <Icon icon={event.type}
+                                                   iconSize={40}/> available
+                            </p>
                             <p className="lead">{new Date(event.date).toLocaleDateString()}</p>
                             <p className="subheader">Event under the address <Address
                                 address={event.address}/></p>
