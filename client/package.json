@@ -27,7 +27,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "build-abi": "typechain ../contracts/ --target ethers-v5 --out-dir client/src/"
   },
   "eslintConfig": {
     "extends": [
