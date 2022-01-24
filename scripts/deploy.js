@@ -9,11 +9,11 @@ async function main() {
 
 	console.log("Account balance:", (await deployer.getBalance()).toString());
 
-	const Token = await hre.ethers.getContractFactory("Token");
-	const token = await Token.deploy();
-	await token.deployed();
+	const NiftyPassFactory = await hre.ethers.getContractFactory("NiftyPassFactory");
+	const niftyPassFactory = await NiftyPassFactory.deploy();
+	await niftyPassFactory.deployed();
 
-	console.log("Token address:", token.address);
+	console.log("Address:", niftyPassFactory.address);
 
 }
 
