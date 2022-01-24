@@ -38,6 +38,6 @@ const list = [
 ];
 
 export function getRandomIcon(text: string): string {
-    const index = parseInt(ethers.utils.id(text).substr(-1), 16);
+    const index = ethers.utils.id(text).substr(-1).charCodeAt(0) % 16;
     return list[index];
 }

@@ -5,7 +5,9 @@ import 'foundation-sites/dist/css/foundation.min.css';
 import {Icon, Tag} from "@blueprintjs/core";
 import {getRandomIcon} from "./helper";
 import {NiftyPassFacatoryABI, NiftyPassFacatoryAddress} from "./NiftyPassFactory.helper";
-import {NiftyPassABI, NiftyPassAddress} from "./NiftyPass.helper";
+import {NiftyPassABI} from "./NiftyPass.helper";
+import {inspect} from "util";
+
 
 declare global {
     interface Window {
@@ -14,12 +16,23 @@ declare global {
     }
 }
 
-export type DataState = { account: any, balance: any, events: any[] };
+export type DataState = { account: any, balance: any, events: EventType[] };
+export type EventType = {
+    address?: any;
+    name?: any;
+    symbol?: any;
+    price?: any;
+    supply: any;
+    date?: any;
+    type?: any;
+};
 
 function App() {
     const [name, updateName] = useState<any>('');
     const [date, updateDate] = useState<any>('');
-    const [value, updateValue] = useState<any>('');
+    const [supply, updateSupply] = useState<any>('');
+    const [symbol, updateSymbol] = useState<any>('');
+    const [price, updatePrice] = useState<any>('');
     const [data, setData] = useState<DataState>({
         account: null,
         balance: null,
@@ -49,17 +62,24 @@ function App() {
         setContract(factoryContract);
         const activeEvents: string[] = (await factoryContract.getActiveEvents() || []);
 
-        for (let i = 0; i < activeEvents.length; i++) {
-            const eventDetailsContract: any = new ethers.Contract(activeEvents[i], NiftyPassABI, provider);
-            let name = await eventDetailsContract.name();
-            let ticketCounts = await eventDetailsContract.ticketCounts();
+        for (let index = 0; index < activeEvents.length; index++) {
+            const eventAddress = activeEvents[index];
+            //Call the contract event address
+            // const eventDetailsContract: any = new ethers.Contract(activeEvents[i], NiftyPassABI, provider);
+            // let name = await eventDetailsContract.name();
+            // let ticketCounts = await eventDetailsContract.ticketCounts();
+            //or Call the factory contract
+            const [name, symbol, price, supply]: any = await factoryContract.getEventDetails(eventAddress);
 
-            const newEvent: any = {
+
+            const newEvent: EventType = {
                 name: name,
+                symbol: symbol,
                 date: '2022-01-01',
-                value: ticketCounts.toString(),
-                address: activeEvents[i],
-                type: getRandomIcon(activeEvents[i])
+                price: price.toString(),
+                supply: supply.toString(),
+                address: eventAddress,
+                type: getRandomIcon(symbol)
             };
 
             newData.events.push(newEvent);
@@ -73,29 +93,43 @@ function App() {
         setData({account: null, balance: null, events: []});
     }, [setData, setProvider]);
 
-    const resetForm = useCallback(async () => {
+    const resetForm = useCallback(() => {
         updateName('');
         updateDate('');
-        updateValue('');
-    }, [updateDate, updateName, updateValue]);
+        updateSymbol('');
+        updateSupply('');
+        updatePrice('');
+    }, [updateDate, updateName, updateSymbol, updateSupply, updatePrice]);
 
     const handleSubmit = useCallback(async () => {
-        //web3Instance
-        const newEvent: any = {
+
+        const newEvent: EventType = {
             name: name,
             date: date,
-            value: value,
+            symbol: symbol,
+            price: price,
+            supply: supply,
             address: data.account,
         };
-        newEvent.type = getRandomIcon(JSON.stringify(newEvent));
+        // newEvent.type = getRandomIcon(JSON.stringify(newEvent));
 
-        setData({
-            ...data,
-            events: (data.events || []).concat([newEvent])
-        });
 
+        // setData({
+        //     ...data,
+        //     events: (data.events || []).concat([newEvent])
+        // });
+        const signer = provider.getSigner();
+        const factoryContract = new ethers.Contract(NiftyPassFacatoryAddress, NiftyPassFacatoryABI, signer);
+
+        const result = await factoryContract.createNewEvent(
+            newEvent.name,
+            newEvent.symbol,
+            ethers.BigNumber.from(newEvent.price),
+            ethers.BigNumber.from(newEvent.supply)
+        );
+        console.log(result);
         resetForm();
-    }, [data, date, name, value, setData, provider]);
+    }, [data, date, name, supply, price, symbol, setData, provider]);
 
     return (
         <div>
@@ -115,7 +149,7 @@ function App() {
                     <ul className="menu">
                         {data.account ? (<>
                                 <li className="menu-text top">
-                                    <Address address={data.account}/>{' '}
+                                    <Address address={data.account} type="address"/>{' '}
                                     <Currency value={data.balance}/>
                                 </li>
                                 <li><a className="button" onClick={() => {
@@ -142,45 +176,70 @@ function App() {
                     {/*<button className="button">Start a free trial</button>*/}
                 </div>
                 <div className="show-for-large large-3 columns">
-                    <img src="https://placehold.it/400x370&text=PSR1257 + 12 C" alt="picture of space"/>
+                
                 </div>
-                <div className="medium-5 large-3 columns">
+                <div className="medium-6 large-5 columns">
                     {data.account && (
-                        <div className="callout secondary">
+                        <div className="callout secondary row">
                             <form onSubmit={handleSubmit}>
-                                <div className="row">
-                                    <div className="small-12 columns">
-                                        <label>What's the name?
-                                            <input id="event-name"
-                                                   required
-                                                   type="text"
-                                                   placeholder="Event name?"
-                                                   value={name}
-                                                   onChange={e => updateName(e.target.value)}
-                                            />
-                                        </label>
+                                <div className="medium-6 large-6 columns">
+                                    <div className="row">
+                                        <div className="small-12 columns">
+                                            <label>What's the name?
+                                                <input id="event-name"
+                                                       required
+                                                       type="text"
+                                                       placeholder="Event name?"
+                                                       value={name}
+                                                       onChange={e => updateName(e.target.value)}
+                                                />
+                                            </label>
+                                            <label>What's the symbol?
+                                                <input id="event-symbol"
+                                                       required
+                                                       type="text"
+                                                       placeholder="Symbol?"
+                                                       value={symbol}
+                                                       onChange={e => updateSymbol(e.target.value)}
+                                                />
+                                            </label>
+                                        </div>
                                     </div>
-                                    <div className="small-12 columns">
-                                        <label>When is the event?
-                                            <input id="event-date"
-                                                   required
-                                                   type="date"
-                                                   placeholder="When is the event?"
-                                                   value={date}
-                                                   onChange={e => updateDate(e.target.value)}/>
-                                        </label>
-                                    </div>
-                                    <div className="small-12 columns">
-                                        <label>Available slots
-                                            <input id="event-value"
-                                                   required
-                                                   type="number"
-                                                   placeholder="Value"
-                                                   value={value}
-                                                   onChange={e => updateValue(e.target.value)}/>
-                                        </label>
-                                        <button type="submit" className="button">Create now!
-                                        </button>
+                                </div>
+                                <div className="medium-6 large-6 columns">
+                                    <div className="row">
+                                        {/*<div className="small-12 columns">*/}
+                                        {/*    <label>When is the event?*/}
+                                        {/*        <input id="event-date"*/}
+                                        {/*               required*/}
+                                        {/*               type="date"*/}
+                                        {/*               placeholder="When is the event?"*/}
+                                        {/*               value={date}*/}
+                                        {/*               onChange={e => updateDate(e.target.value)}/>*/}
+                                        {/*    </label>*/}
+                                        {/*</div>*/}
+                                        <div className="small-12 columns">
+                                            <label>Supply
+                                                <input id="event-supply"
+                                                       required
+                                                       type="number"
+                                                       placeholder="Supply"
+                                                       value={supply}
+                                                       onChange={e => updateSupply(e.target.value)}/>
+                                            </label>
+                                        </div>
+                                        <div className="small-12 columns">
+                                            <label>Price
+                                                <input id="event-price"
+                                                       required
+                                                       type="number"
+                                                       placeholder="Price"
+                                                       value={price}
+                                                       onChange={e => updatePrice(e.target.value)}/>
+                                            </label>
+                                            <button type="submit" className="button">Create now!
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </form>
@@ -198,12 +257,16 @@ function App() {
                 {data.events?.map((event: any, index: number) => (
                     <div className="column" key={index}>
                         <div className="callout">
-                            <h3 style={{textTransform: 'capitalize'}}>{event.name}</h3>
-                            <p>{event.value} <Icon icon={event.type}
-                                                   iconSize={40}/> available
+                            <h3 style={{textTransform: 'capitalize'}} title="Event name">{event.name}</h3>
+                            <p title="Available tickets"><span className="ticket-count">{event.supply}</span> <Icon
+                                icon={event.type}
+                                iconSize={40}/>
+                                {' '}<small title="Price per ticket">({event.price})</small>
+
                             </p>
-                            <p className="lead">{new Date(event.date).toLocaleDateString()}</p>
+                            {/*<p className="lead">{new Date(event.date).toLocaleDateString()}</p>*/}
                             <p className="subheader">Event under the address <Address
+                                type="contract"
                                 address={event.address}/></p>
                         </div>
                     </div>
@@ -246,15 +309,33 @@ function App() {
     );
 }
 
-const Address: FunctionComponent<{ address: string | undefined }> = ({address}) => {
+const Address: FunctionComponent<{
+    address: string | undefined,
+    type: 'address' | 'tx' | 'contract'
+}> = ({
+          address,
+          type
+      }) => {
     if (!address) {
         return null;
     }
 
+    let href;
+
+    if (type === 'address') {
+        href = `https://rinkeby.etherscan.io/address/${address}`;
+    } else if (type === 'contract') {
+        href = `https://rinkeby.etherscan.io/address/${address}#internaltx`;
+    } else {
+        href = `https://rinkeby.etherscan.io/tx/${address}`;
+    }
+
     return (
-        <Tag title={`Full Address: ${address}`}>
-            {address.substr(0, 6)}...{address.substr(-4)}
-        </Tag>
+        <a href={href} target="_blank" className="address-link">
+            <Tag title={`Full Address: ${address}`}>
+                {address.substr(0, 6)}...{address.substr(-4)}
+            </Tag>
+        </a>
     );
 };
 
