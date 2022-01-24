@@ -4,9 +4,8 @@ import {ethers} from 'ethers';
 import 'foundation-sites/dist/css/foundation.min.css';
 import {Icon, Tag} from "@blueprintjs/core";
 import {getRandomIcon} from "./helper";
-import {NiftyPassFacatoryABI, NiftyPassFacatoryAddress} from "./NiftyPassFactory.helper";
-import {NiftyPassABI} from "./NiftyPass.helper";
-import {inspect} from "util";
+import {NiftyPassFactoryABI, NiftyPassFactoryAddress} from "./NiftyPassFactory.helper";
+import {NiftyPassABI, NiftyPassAddress} from "./NiftyPass.helper";
 
 
 declare global {
@@ -58,7 +57,7 @@ function App() {
             events: []
         };
 
-        const factoryContract = new ethers.Contract(NiftyPassFacatoryAddress, NiftyPassFacatoryABI, provider);
+        const factoryContract = new ethers.Contract(NiftyPassFactoryAddress, NiftyPassFactoryABI, provider);
         setContract(factoryContract);
         const activeEvents: string[] = (await factoryContract.getActiveEvents() || []);
 
@@ -119,7 +118,7 @@ function App() {
         //     events: (data.events || []).concat([newEvent])
         // });
         const signer = provider.getSigner();
-        const factoryContract = new ethers.Contract(NiftyPassFacatoryAddress, NiftyPassFacatoryABI, signer);
+        const factoryContract = new ethers.Contract(NiftyPassFactoryAddress, NiftyPassFactoryABI, signer);
 
         const result = await factoryContract.createNewEvent(
             newEvent.name,
@@ -171,12 +170,14 @@ function App() {
             <div className="row">
                 <div className="medium-7 large-6 columns">
                     <h1>Create NFT events</h1>
-                    <p className="subheader">There is beauty decentralising an event organiser. Lorem ipsum.</p>
+                    <p className="subheader">There is beauty decentralising an event organiser.</p>
+                    <p><Address address={NiftyPassFactoryAddress} type="code"/> NiftyPass Factory Contract</p>
+                    <p><Address address={NiftyPassAddress} type="code"/> NiftyPass Contract</p>
                     {/*<button className="button">Take a Tour</button>*/}
                     {/*<button className="button">Start a free trial</button>*/}
                 </div>
                 <div className="show-for-large large-3 columns">
-                
+
                 </div>
                 <div className="medium-6 large-5 columns">
                     {data.account && (
@@ -311,7 +312,7 @@ function App() {
 
 const Address: FunctionComponent<{
     address: string | undefined,
-    type: 'address' | 'tx' | 'contract'
+    type: 'address' | 'tx' | 'contract' | 'code'
 }> = ({
           address,
           type
@@ -326,6 +327,8 @@ const Address: FunctionComponent<{
         href = `https://rinkeby.etherscan.io/address/${address}`;
     } else if (type === 'contract') {
         href = `https://rinkeby.etherscan.io/address/${address}#internaltx`;
+    } else if (type === 'code') {
+        href = `https://rinkeby.etherscan.io/address/${address}#code`;
     } else {
         href = `https://rinkeby.etherscan.io/tx/${address}`;
     }

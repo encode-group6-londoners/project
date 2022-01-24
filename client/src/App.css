@@ -41,9 +41,14 @@
     }
 }
 
+a.address-link:hover {
+    text-decoration: none;
+}
+
 a.address-link {
     display: inline-block !important;
     padding: 0 !important;
+    cursor: pointer;
 }
 
 .ticket-count {
