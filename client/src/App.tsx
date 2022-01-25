@@ -24,6 +24,10 @@ export type EventType = {
     supply: any;
     date?: any;
     type?: any;
+    organiser?: any;
+    ticketCounts?: any;
+    soldTickets?: any[];
+    myTickets?: any[];
 };
 
 function App() {
@@ -64,9 +68,11 @@ function App() {
         for (let index = 0; index < activeEvents.length; index++) {
             const eventAddress = activeEvents[index];
             //Call the contract event address
-            // const eventDetailsContract: any = new ethers.Contract(activeEvents[i], NiftyPassABI, provider);
-            // let name = await eventDetailsContract.name();
-            // let ticketCounts = await eventDetailsContract.ticketCounts();
+            const eventDetailsContract: any = new ethers.Contract(eventAddress, NiftyPassABI, provider);
+            let organiser = await eventDetailsContract.getOrganiser();
+            let ticketCounts = await eventDetailsContract.ticketCounts();
+            let myAddress = await provider.getSigner().getAddress();
+            let myTickets = await eventDetailsContract.getTicketsOfCustomer(ethers.utils.getAddress(myAddress));
             //or Call the factory contract
             const [name, symbol, price, supply]: any = await factoryContract.getEventDetails(eventAddress);
 
@@ -78,7 +84,10 @@ function App() {
                 price: price.toString(),
                 supply: supply.toString(),
                 address: eventAddress,
-                type: getRandomIcon(symbol)
+                type: getRandomIcon(symbol),
+                organiser: organiser,
+                ticketCounts: ticketCounts.toString(),
+                myTickets: myTickets,
             };
 
             newData.events.push(newEvent);
@@ -86,6 +95,14 @@ function App() {
 
         setData(newData);
     }, [setData, setProvider, setSigner, setContract]);
+
+    const buyTicket = useCallback(async (eventIndex: number) => {
+        const event = data.events[eventIndex];
+        const eventDetailsContract: any = new ethers.Contract(event.address, NiftyPassABI, provider.getSigner());
+        const myAddress = await signer.getAddress();
+        const result = await eventDetailsContract.bulkMintTickets(ethers.BigNumber.from(1), ethers.utils.getAddress(myAddress));
+        console.log(result);
+    }, [data, provider]);
 
     const logout = useCallback(async () => {
         setProvider(null);
@@ -100,8 +117,8 @@ function App() {
         updatePrice('');
     }, [updateDate, updateName, updateSymbol, updateSupply, updatePrice]);
 
-    const handleSubmit = useCallback(async () => {
-
+    const handleSubmit = useCallback(async (event: any) => {
+        event.preventDefault();
         const newEvent: EventType = {
             name: name,
             date: date,
@@ -110,13 +127,6 @@ function App() {
             supply: supply,
             address: data.account,
         };
-        // newEvent.type = getRandomIcon(JSON.stringify(newEvent));
-
-
-        // setData({
-        //     ...data,
-        //     events: (data.events || []).concat([newEvent])
-        // });
         const signer = provider.getSigner();
         const factoryContract = new ethers.Contract(NiftyPassFactoryAddress, NiftyPassFactoryABI, signer);
 
@@ -182,7 +192,9 @@ function App() {
                 <div className="medium-6 large-5 columns">
                     {data.account && (
                         <div className="callout secondary row">
-                            <form onSubmit={handleSubmit}>
+                            <form onSubmit={async (event) => {
+                                await handleSubmit(event);
+                            }}>
                                 <div className="medium-6 large-6 columns">
                                     <div className="row">
                                         <div className="small-12 columns">
@@ -259,16 +271,26 @@ function App() {
                     <div className="column" key={index}>
                         <div className="callout">
                             <h3 style={{textTransform: 'capitalize'}} title="Event name">{event.name}</h3>
-                            <p title="Available tickets"><span className="ticket-count">{event.supply}</span> <Icon
+                            <p title="Available tickets"><span
+                                className="ticket-count">{event.supply - event.ticketCounts}/{event.supply}</span> <Icon
                                 icon={event.type}
                                 iconSize={40}/>
                                 {' '}<small title="Price per ticket">({event.price})</small>
 
                             </p>
                             {/*<p className="lead">{new Date(event.date).toLocaleDateString()}</p>*/}
-                            <p className="subheader">Event under the address <Address
+                            <p className="subheader">Event <Address
                                 type="contract"
                                 address={event.address}/></p>
+                            <p className="subheader">Organiser <Address
+                                type="contract"
+                                address={event.organiser}/></p>
+                            {event.myTickets?.map((ticket: any) => (
+                                <>{ticket}</>
+                            ))}
+                            <a className="button" onClick={async () => {
+                                await buyTicket(index);
+                            }}>Get one ticket</a>
                         </div>
                     </div>
                 ))}
